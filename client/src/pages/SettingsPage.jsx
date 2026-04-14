@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Building2, Globe, Clock, DollarSign, Shield } from 'lucide-react';
+import { Save, Building2, Settings, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
@@ -30,14 +30,13 @@ function Field({ label, children }) {
 }
 
 const INPUT_CLS = "w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition";
-const SELECT_CLS = `${INPUT_CLS} bg-white`;
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
 
-  const [company, setCompany] = useState({ name: '', industry: '', address: '', phone: '', email: '', website: '' });
-  const [config, setConfig] = useState({ timezone: '', dateFormat: '', currency: '', maxProjects: 50, allowPublicShare: false });
+  const [company, setCompany] = useState({ name: '', email: '', phone: '' });
+  const [config, setConfig] = useState({ construction_enabled: true });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState('');
   const [success, setSuccess] = useState('');
@@ -49,19 +48,12 @@ export default function SettingsPage() {
         const c = data.data.company;
         setCompany({
           name: c.name || '',
-          industry: c.industry || '',
-          address: c.address || '',
-          phone: c.phone || '',
           email: c.email || '',
-          website: c.website || '',
+          phone: c.phone || '',
         });
         if (c.config) {
           setConfig({
-            timezone: c.config.timezone || 'UTC',
-            dateFormat: c.config.dateFormat || 'YYYY-MM-DD',
-            currency: c.config.currency || 'USD',
-            maxProjects: c.config.maxProjects || 50,
-            allowPublicShare: c.config.allowPublicShare || false,
+            construction_enabled: c.config.construction_enabled ?? true,
           });
         }
       } catch (err) {
@@ -128,28 +120,17 @@ export default function SettingsPage() {
       {/* Company Profile */}
       <form onSubmit={saveCompany}>
         <SectionCard icon={Building2} title="Company Profile" description="General information about your organization">
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Company Name">
-              <input value={company.name} onChange={(e) => setCompany({ ...company, name: e.target.value })} disabled={!isAdmin} className={INPUT_CLS} />
-            </Field>
-            <Field label="Industry">
-              <input value={company.industry} onChange={(e) => setCompany({ ...company, industry: e.target.value })} disabled={!isAdmin} className={INPUT_CLS} />
-            </Field>
-          </div>
-          <Field label="Address">
-            <input value={company.address} onChange={(e) => setCompany({ ...company, address: e.target.value })} disabled={!isAdmin} className={INPUT_CLS} />
+          <Field label="Company Name">
+            <input value={company.name} onChange={(e) => setCompany({ ...company, name: e.target.value })} disabled={!isAdmin} className={INPUT_CLS} />
           </Field>
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Phone">
-              <input value={company.phone} onChange={(e) => setCompany({ ...company, phone: e.target.value })} disabled={!isAdmin} className={INPUT_CLS} />
-            </Field>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Email">
               <input type="email" value={company.email} onChange={(e) => setCompany({ ...company, email: e.target.value })} disabled={!isAdmin} className={INPUT_CLS} />
             </Field>
+            <Field label="Phone">
+              <input value={company.phone} onChange={(e) => setCompany({ ...company, phone: e.target.value })} disabled={!isAdmin} className={INPUT_CLS} />
+            </Field>
           </div>
-          <Field label="Website">
-            <input value={company.website} onChange={(e) => setCompany({ ...company, website: e.target.value })} disabled={!isAdmin} className={INPUT_CLS} />
-          </Field>
           {isAdmin && (
             <div className="pt-2">
               <button type="submit" disabled={saving === 'company'} className="flex items-center gap-2 bg-gradient-to-r from-primary to-primary-light text-white font-semibold text-sm px-5 py-2.5 rounded-lg hover:opacity-90 transition disabled:opacity-50 shadow-sm">
@@ -163,56 +144,19 @@ export default function SettingsPage() {
 
       {/* System Configuration */}
       <form onSubmit={saveConfig}>
-        <SectionCard icon={Globe} title="System Configuration" description="Regional and system-wide preferences">
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Timezone">
-              <select value={config.timezone} onChange={(e) => setConfig({ ...config, timezone: e.target.value })} disabled={!isAdmin} className={SELECT_CLS}>
-                <option value="UTC">UTC</option>
-                <option value="America/New_York">America/New_York</option>
-                <option value="America/Chicago">America/Chicago</option>
-                <option value="America/Denver">America/Denver</option>
-                <option value="America/Los_Angeles">America/Los_Angeles</option>
-                <option value="Europe/London">Europe/London</option>
-                <option value="Europe/Berlin">Europe/Berlin</option>
-                <option value="Asia/Tokyo">Asia/Tokyo</option>
-                <option value="Asia/Shanghai">Asia/Shanghai</option>
-                <option value="Africa/Nairobi">Africa/Nairobi</option>
-              </select>
-            </Field>
-            <Field label="Date Format">
-              <select value={config.dateFormat} onChange={(e) => setConfig({ ...config, dateFormat: e.target.value })} disabled={!isAdmin} className={SELECT_CLS}>
-                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-              </select>
-            </Field>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Currency">
-              <select value={config.currency} onChange={(e) => setConfig({ ...config, currency: e.target.value })} disabled={!isAdmin} className={SELECT_CLS}>
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR</option>
-                <option value="GBP">GBP</option>
-                <option value="JPY">JPY</option>
-                <option value="KES">KES</option>
-              </select>
-            </Field>
-            <Field label="Max Projects">
-              <input type="number" min="1" max="500" value={config.maxProjects} onChange={(e) => setConfig({ ...config, maxProjects: Number(e.target.value) })} disabled={!isAdmin} className={INPUT_CLS} />
-            </Field>
-          </div>
+        <SectionCard icon={Settings} title="System Configuration" description="System-wide preferences">
           <div className="flex items-center justify-between py-2 px-1">
             <div>
-              <p className="text-sm font-medium text-dark">Allow Public Sharing</p>
-              <p className="text-xs text-muted">Enable sharing project details publicly</p>
+              <p className="text-sm font-medium text-dark">Construction Enabled</p>
+              <p className="text-xs text-muted">Enable construction module features</p>
             </div>
             <button
               type="button"
               disabled={!isAdmin}
-              onClick={() => setConfig({ ...config, allowPublicShare: !config.allowPublicShare })}
-              className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${config.allowPublicShare ? 'bg-primary' : 'bg-gray-300'} ${!isAdmin ? 'opacity-50' : ''}`}
+              onClick={() => setConfig({ ...config, construction_enabled: !config.construction_enabled })}
+              className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${config.construction_enabled ? 'bg-primary' : 'bg-gray-300'} ${!isAdmin ? 'opacity-50' : ''}`}
             >
-              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${config.allowPublicShare ? 'translate-x-5' : ''}`} />
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${config.construction_enabled ? 'translate-x-5' : ''}`} />
             </button>
           </div>
           {isAdmin && (

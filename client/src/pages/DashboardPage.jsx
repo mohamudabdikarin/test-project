@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, DollarSign, CheckSquare, ArrowRight, TrendingUp } from 'lucide-react';
+import { Users, FolderKanban, DollarSign, CheckSquare, ArrowRight } from 'lucide-react';
 import api from '../services/api';
 import useCountUp from '../hooks/useCountUp';
 
@@ -43,24 +43,16 @@ function ProjectRow({ project }) {
 
   return (
     <tr className="border-t border-gray-100 hover:bg-primary-bg/30 transition-colors duration-200 cursor-pointer group">
-      <td className="py-4 px-6">
+      <td className="py-4 px-4 sm:px-6 whitespace-nowrap">
         <p className="text-sm font-medium text-dark group-hover:text-primary transition-colors">{project.name}</p>
-        <p className="text-xs text-muted">{project.priority} Priority</p>
       </td>
-      <td className="py-4 px-6">
-        <div className="flex items-center gap-3">
-          <div className="w-6 h-6 rounded-full bg-primary-bg flex items-center justify-center text-[10px] font-bold text-primary">
-            {project.assignee ? `${project.assignee.firstName[0]}${project.assignee.lastName[0]}` : '–'}
-          </div>
-          <span className="text-sm text-dark">
-            {project.assignee ? `${project.assignee.firstName} ${project.assignee.lastName[0]}.` : 'Unassigned'}
-          </span>
-        </div>
+      <td className="py-4 px-4 sm:px-6 text-sm text-muted whitespace-nowrap">
+        {project.location || '–'}
       </td>
-      <td className="py-4 px-6 text-sm text-muted">
-        {project.endDate ? new Date(project.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '–'}
+      <td className="py-4 px-4 sm:px-6 text-sm text-dark whitespace-nowrap">
+        {project.budget ? `$${Number(project.budget).toLocaleString()}` : '–'}
       </td>
-      <td className="py-4 px-6">
+      <td className="py-4 px-4 sm:px-6 whitespace-nowrap">
         <span className={`text-xs font-medium px-2.5 py-1 rounded-md ${statusColors[project.status] || 'bg-gray-100 text-gray-600'}`}>
           {project.status.replace('_', ' ')}
         </span>
@@ -97,7 +89,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-3 gap-6 animate-pulse">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-pulse">
         {[1, 2, 3].map((i) => (
           <div key={i} className="bg-white rounded-xl h-36 border border-card-border" />
         ))}
@@ -115,48 +107,52 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          icon={Clock}
-          label="Timeline"
-          rawValue={stats?.avgProgress || 0}
-          suffix="%"
-          sub="Avg Progress"
-          progress={stats?.avgProgress}
+          icon={Users}
+          label="Members"
+          rawValue={company?._count?.users || 0}
+          sub="team members"
+        />
+        <StatCard
+          icon={FolderKanban}
+          label="Projects"
+          rawValue={company?._count?.projects || 0}
+          sub={`${stats?.byStatus?.ACTIVE || 0} active`}
         />
         <StatCard
           icon={DollarSign}
-          label="Budget Utilization"
+          label="Total Budget"
           rawValue={budgetRaw}
           prefix={budgetPrefix}
           suffix={budgetSuffix}
-          sub="total budget"
+          sub="allocated"
         />
         <StatCard
           icon={CheckSquare}
-          label="Task Volume"
-          rawValue={stats?.total || 0}
-          sub={`${stats?.byStatus?.COMPLETED || 0} Completed / ${(stats?.total || 0) - (stats?.byStatus?.COMPLETED || 0)} Remaining`}
+          label="Completed"
+          rawValue={stats?.byStatus?.COMPLETED || 0}
+          sub={`of ${stats?.total || 0} projects`}
           progress={stats?.total ? ((stats?.byStatus?.COMPLETED || 0) / stats.total) * 100 : 0}
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Projects Table */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-card-border">
+      {/* Projects Table */}
+      <div className="bg-white rounded-xl border border-card-border">
           <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
             <h3 className="text-lg font-bold text-dark">Milestones & Tasks</h3>
             <Link to="/projects" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
               View All <ArrowRight size={14} />
             </Link>
           </div>
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="text-left text-xs font-bold text-muted tracking-wider uppercase">
-                <th className="px-6 py-3">Task Name</th>
-                <th className="px-6 py-3">Assignee</th>
-                <th className="px-6 py-3">Due Date</th>
-                <th className="px-6 py-3">Status</th>
+                <th className="px-4 sm:px-6 py-3 whitespace-nowrap">Project</th>
+                <th className="px-4 sm:px-6 py-3 whitespace-nowrap">Location</th>
+                <th className="px-4 sm:px-6 py-3 whitespace-nowrap">Budget</th>
+                <th className="px-4 sm:px-6 py-3 whitespace-nowrap">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -167,35 +163,7 @@ export default function DashboardPage() {
               )}
             </tbody>
           </table>
-        </div>
-
-        {/* Company Info Card */}
-        <div className="bg-white rounded-xl border border-card-border p-6 flex flex-col gap-4">
-          <h3 className="text-lg font-bold text-dark">Company</h3>
-          {company && (
-            <>
-              <div>
-                <p className="text-base font-semibold text-dark">{company.name}</p>
-                <p className="text-xs text-muted">{company.industry}</p>
-              </div>
-              <div className="text-sm text-muted space-y-1">
-                {company.address && <p>{company.address}</p>}
-                {company.email && <p>{company.email}</p>}
-                {company.website && <p>{company.website}</p>}
-              </div>
-              <div className="flex gap-4 pt-2 border-t border-gray-100">
-                <div>
-                  <p className="text-xl font-bold text-dark">{company._count?.users || 0}</p>
-                  <p className="text-xs text-muted">Members</p>
-                </div>
-                <div>
-                  <p className="text-xl font-bold text-dark">{company._count?.projects || 0}</p>
-                  <p className="text-xs text-muted">Projects</p>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
+          </div>
       </div>
     </div>
   );

@@ -1,10 +1,10 @@
 const ApiError = require("../../utils/apiError");
 
 const validateRegister = (req, res, next) => {
-  const { email, password, firstName, lastName } = req.body;
+  const { email, password, name } = req.body;
 
-  if (!email || !password || !firstName || !lastName) {
-    throw new ApiError(400, "All fields are required: email, password, firstName, lastName");
+  if (!email || !password || !name) {
+    throw new ApiError(400, "All fields are required: email, password, name");
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -16,8 +16,8 @@ const validateRegister = (req, res, next) => {
     throw new ApiError(400, "Password must be at least 8 characters");
   }
 
-  if (firstName.trim().length < 2 || lastName.trim().length < 2) {
-    throw new ApiError(400, "First and last name must be at least 2 characters");
+  if (name.trim().length < 2) {
+    throw new ApiError(400, "Name must be at least 2 characters");
   }
 
   next();

@@ -3,13 +3,12 @@ const { sendSuccess } = require("../../utils/apiResponse");
 const { setTokenCookie } = require("../../utils/jwt");
 
 const register = async (req, res) => {
-  const { email, password, firstName, lastName, companyId } = req.body;
+  const { email, password, name, companyId } = req.body;
 
   const { user, token } = await authService.register({
     email,
     password,
-    firstName,
-    lastName,
+    name,
     companyId,
   });
 

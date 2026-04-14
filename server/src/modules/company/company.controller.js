@@ -20,24 +20,21 @@ const getCompanyProfile = async (req, res) => {
 
 const getCompanyMembers = async (req, res) => {
   const members = await prisma.user.findMany({
-    where: { companyId: req.companyId, isActive: true },
+    where: { companyId: req.companyId, status: "ACTIVE" },
     select: {
       id: true,
-      firstName: true,
-      lastName: true,
+      name: true,
       email: true,
       role: true,
-      avatar: true,
-      lastLogin: true,
     },
-    orderBy: { firstName: "asc" },
+    orderBy: { name: "asc" },
   });
 
   sendSuccess(res, 200, { members, total: members.length }, "Members fetched");
 };
 
 const updateConfig = async (req, res) => {
-  const { timezone, dateFormat, currency, maxProjects, allowPublicShare } = req.body;
+  const { construction_enabled } = req.body;
 
   const config = await prisma.systemConfig.findUnique({
     where: { companyId: req.companyId },
@@ -48,11 +45,7 @@ const updateConfig = async (req, res) => {
   }
 
   const updateData = {};
-  if (timezone !== undefined) updateData.timezone = timezone;
-  if (dateFormat !== undefined) updateData.dateFormat = dateFormat;
-  if (currency !== undefined) updateData.currency = currency;
-  if (maxProjects !== undefined) updateData.maxProjects = Number(maxProjects);
-  if (allowPublicShare !== undefined) updateData.allowPublicShare = Boolean(allowPublicShare);
+  if (construction_enabled !== undefined) updateData.construction_enabled = Boolean(construction_enabled);
 
   const updated = await prisma.systemConfig.update({
     where: { companyId: req.companyId },
@@ -63,15 +56,12 @@ const updateConfig = async (req, res) => {
 };
 
 const updateCompanyProfile = async (req, res) => {
-  const { name, industry, address, phone, email, website } = req.body;
+  const { name, phone, email } = req.body;
 
   const updateData = {};
   if (name !== undefined) updateData.name = name.trim();
-  if (industry !== undefined) updateData.industry = industry;
-  if (address !== undefined) updateData.address = address;
   if (phone !== undefined) updateData.phone = phone;
   if (email !== undefined) updateData.email = email;
-  if (website !== undefined) updateData.website = website;
 
   const company = await prisma.companyProfile.update({
     where: { id: req.companyId },

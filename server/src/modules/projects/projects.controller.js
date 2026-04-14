@@ -12,7 +12,7 @@ const getProject = async (req, res) => {
 };
 
 const createProject = async (req, res) => {
-  const project = await projectsService.create(req.body, req.user.id, req.companyId);
+  const project = await projectsService.create(req.body, req.companyId);
   sendSuccess(res, 201, { project }, "Project created");
 };
 

@@ -5,7 +5,7 @@ const { generateToken } = require("../../utils/jwt");
 
 const SALT_ROUNDS = 12;
 
-const register = async ({ email, password, firstName, lastName, companyId }) => {
+const register = async ({ email, password, name, companyId }) => {
   // Check if user already exists
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -23,19 +23,17 @@ const register = async ({ email, password, firstName, lastName, companyId }) => 
   const user = await prisma.user.create({
     data: {
       email: email.toLowerCase().trim(),
-      password: hashedPassword,
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
+      password_hash: hashedPassword,
+      name: name.trim(),
       companyId,
     },
     select: {
       id: true,
+      name: true,
       email: true,
-      firstName: true,
-      lastName: true,
       role: true,
+      status: true,
       companyId: true,
-      createdAt: true,
     },
   });
 
@@ -53,26 +51,20 @@ const login = async ({ email, password }) => {
     throw new ApiError(401, "Invalid email or password");
   }
 
-  if (!user.isActive) {
+  if (user.status !== "ACTIVE") {
     throw new ApiError(403, "Account has been deactivated. Contact your admin.");
   }
 
   // Compare password
-  const isMatch = await bcrypt.compare(password, user.password);
+  const isMatch = await bcrypt.compare(password, user.password_hash);
   if (!isMatch) {
     throw new ApiError(401, "Invalid email or password");
   }
 
-  // Update last login
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { lastLogin: new Date() },
-  });
-
   const token = generateToken(user.id);
 
-  // Return user without password
-  const { password: _, ...safeUser } = user;
+  // Return user without password_hash
+  const { password_hash: _, ...safeUser } = user;
   return { user: safeUser, token };
 };
 
@@ -81,20 +73,15 @@ const getProfile = async (userId) => {
     where: { id: userId },
     select: {
       id: true,
+      name: true,
       email: true,
-      firstName: true,
-      lastName: true,
       role: true,
-      avatar: true,
+      status: true,
       companyId: true,
-      lastLogin: true,
-      createdAt: true,
       company: {
         select: {
           id: true,
           name: true,
-          slug: true,
-          logo: true,
         },
       },
     },

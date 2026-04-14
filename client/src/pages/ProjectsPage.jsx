@@ -6,7 +6,6 @@ import api from '../services/api';
 import CreateProjectModal from '../components/CreateProjectModal';
 import EditProjectModal from '../components/EditProjectModal';
 import ConfirmModal from '../components/ConfirmModal';
-import ProjectDetailSidebar from '../components/ProjectDetailSidebar';
 
 const STATUS_COLORS = {
   PLANNING: 'bg-amber-50 text-amber-700',
@@ -16,20 +15,6 @@ const STATUS_COLORS = {
   CANCELLED: 'bg-red-50 text-red-600',
 };
 
-const PRIORITY_COLORS = {
-  LOW: 'bg-gray-100 text-gray-600',
-  MEDIUM: 'bg-blue-50 text-blue-600',
-  HIGH: 'bg-orange-50 text-orange-600',
-  CRITICAL: 'bg-red-50 text-red-600',
-};
-
-const STATUS_PROGRESS = {
-  PLANNING: 10,
-  ACTIVE: 50,
-  ON_HOLD: 25,
-  COMPLETED: 100,
-  CANCELLED: 0,
-};
 
 export default function ProjectsPage() {
   const { user } = useAuth();
@@ -42,7 +27,6 @@ export default function ProjectsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editProject, setEditProject] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [selectedProject, setSelectedProject] = useState(null);
   const canWrite = ['ADMIN', 'MANAGER'].includes(user?.role);
   const canDelete = user?.role === 'ADMIN';
 
@@ -105,8 +89,8 @@ export default function ProjectsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 bg-white rounded-lg border border-card-border px-3 py-2 flex-1 max-w-xs">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="flex items-center gap-2 bg-white rounded-lg border border-card-border px-3 py-2 flex-1 sm:max-w-xs">
           <Search size={16} className="text-light-muted" />
           <input
             type="text"
@@ -131,97 +115,77 @@ export default function ProjectsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-card-border overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white rounded-xl border border-card-border">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[600px]">
           <thead>
             <tr className="text-left text-xs font-bold text-muted tracking-wider uppercase border-b border-gray-100">
-              <th className="px-6 py-3">Project</th>
-              <th className="px-6 py-3">Status</th>
-              <th className="px-6 py-3">Priority</th>
-              <th className="px-6 py-3">Progress</th>
-              <th className="px-6 py-3">Assignee</th>
-              <th className="px-6 py-3">Due Date</th>
-              {canWrite && <th className="px-6 py-3 text-right">Actions</th>}
+              <th className="px-4 sm:px-6 py-3 whitespace-nowrap">Project</th>
+              <th className="px-4 sm:px-6 py-3 whitespace-nowrap">Location</th>
+              <th className="px-4 sm:px-6 py-3 whitespace-nowrap">Budget</th>
+              <th className="px-4 sm:px-6 py-3 whitespace-nowrap">Status</th>
+              {canWrite && <th className="px-4 sm:px-6 py-3 text-right whitespace-nowrap">Actions</th>}
             </tr>
           </thead>
           <tbody>
             {loading && Array.from({ length: 4 }).map((_, i) => (
               <tr key={i} className="border-t border-gray-50">
-                <td colSpan={canWrite ? 7 : 6} className="py-5 px-6">
+                <td colSpan={canWrite ? 5 : 4} className="py-5 px-6">
                   <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4" />
                 </td>
               </tr>
             ))}
             {!loading && projects.length === 0 && (
               <tr>
-                <td colSpan={canWrite ? 7 : 6} className="text-center py-12 text-sm text-muted">
+                <td colSpan={canWrite ? 5 : 4} className="text-center py-12 text-sm text-muted">
                   No projects found
                 </td>
               </tr>
             )}
-            {!loading && projects.map((p) => {
-              const progress = STATUS_PROGRESS[p.status] ?? 0;
-              return (
-                <tr
-                  key={p.id}
-                  onClick={() => setSelectedProject(p)}
-                  className="border-t border-gray-50 hover:bg-primary-bg/20 transition cursor-pointer"
-                >
-                  <td className="px-6 py-4">
-                    <p className="text-sm font-medium text-dark">{p.name}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`text-xs font-medium px-2.5 py-1 rounded-md ${STATUS_COLORS[p.status]}`}>
-                      {p.status.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`text-xs font-medium px-2.5 py-1 rounded-md ${PRIORITY_COLORS[p.priority]}`}>
-                      {p.priority}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-20 h-1.5 bg-gray-100 rounded-full">
-                        <div
-                          className="h-full bg-primary rounded-full transition-all"
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-muted">{progress}%</span>
+            {!loading && projects.map((p) => (
+              <tr
+                key={p.id}
+                className="border-t border-gray-50 hover:bg-primary-bg/20 transition"
+              >
+                <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                  <p className="text-sm font-medium text-dark">{p.name}</p>
+                </td>
+                <td className="px-4 sm:px-6 py-4 text-sm text-muted whitespace-nowrap">
+                  {p.location || '–'}
+                </td>
+                <td className="px-4 sm:px-6 py-4 text-sm text-dark whitespace-nowrap">
+                  {p.budget ? `$${Number(p.budget).toLocaleString()}` : '–'}
+                </td>
+                <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-md ${STATUS_COLORS[p.status]}`}>
+                    {p.status.replace('_', ' ')}
+                  </span>
+                </td>
+                {canWrite && (
+                  <td className="px-4 sm:px-6 py-4 text-right whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setEditProject(p); }}
+                        className="p-1.5 text-light-muted hover:text-primary transition rounded-md hover:bg-primary-bg"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      {canDelete && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(p); }}
+                          className="p-1.5 text-light-muted hover:text-red-500 transition rounded-md hover:bg-red-50"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-dark">
-                    {p.assignee ? `${p.assignee.firstName} ${p.assignee.lastName[0]}.` : '–'}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-muted">
-                    {p.endDate ? new Date(p.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '–'}
-                  </td>
-                  {canWrite && (
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setEditProject(p); }}
-                          className="p-1.5 text-light-muted hover:text-primary transition rounded-md hover:bg-primary-bg"
-                        >
-                          <Pencil size={14} />
-                        </button>
-                        {canDelete && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setDeleteTarget(p); }}
-                            className="p-1.5 text-light-muted hover:text-red-500 transition rounded-md hover:bg-red-50"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              );
-            })}
+                )}
+              </tr>
+            ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Pagination */}
@@ -261,7 +225,6 @@ export default function ProjectsPage() {
           onCancel={() => setDeleteTarget(null)}
         />
       )}
-      <ProjectDetailSidebar project={selectedProject} onClose={() => setSelectedProject(null)} />
     </div>
   );
 }

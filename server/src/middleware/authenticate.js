@@ -32,16 +32,15 @@ const authenticate = async (req, res, next) => {
     where: { id: decoded.userId },
     select: {
       id: true,
+      name: true,
       email: true,
-      firstName: true,
-      lastName: true,
       role: true,
-      isActive: true,
+      status: true,
       companyId: true,
     },
   });
 
-  if (!user || !user.isActive) {
+  if (!user || user.status !== "ACTIVE") {
     throw new ApiError(401, "User no longer exists or is deactivated.");
   }
 
