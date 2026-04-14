@@ -11,8 +11,13 @@ const errorHandler = require("./middleware/errorHandler");
 const app = express();
 
 // --------------- Global Middleware ---------------
+app.use(cors({
+  origin: env.CLIENT_URL,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 app.use(helmet());
-app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
 app.use(express.json({ limit: "10kb" }));
 app.use(cookieParser());
 
