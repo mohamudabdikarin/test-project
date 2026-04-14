@@ -4,6 +4,8 @@ A full-stack project management platform built for HR/construction teams. Each c
 
 ---
 
+![DB Diagram](design-mock.png)
+
 ## 1. Short Explanation
 
 ProManager is a **multi-tenant** web application where each company operates in its own isolated environment. The system supports:
@@ -23,7 +25,7 @@ ProManager is a **multi-tenant** web application where each company operates in 
 
 ## 2. DB Design
 
-The database has **4 tables** with clean relationships. Use the DBML below on [dbdiagram.io](https://dbdiagram.io) to visualize.
+The database has **4 tables** with clean relationships.
 
 ![DB Diagram](db-diagram.png)
 
@@ -194,3 +196,13 @@ npm run dev                  # Start Vite dev server on port 5173
 | Method | Route | Description |
 |---|---|---|
 | GET | `/api/health` | Health check |
+
+
+## Developer Information
+
+Name: Mohamud Abdikarim
+Email: mohamdev2026@gmail.com
+Phone: +252615962724
+LinkedIn: https://www.linkedin.com/in/mohamud24/
+GitHub: github.com/mohamudabdikarin
+
